@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tutoring Manager 2027</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<div class="app-container">
+    
+    <section id="main-page">
+        <div class="mode-switch-container">
+            <div class="mode-switch">
+                <button class="mode-btn active" onclick="setMode('teacher')">선생님</button>
+                <button class="mode-btn" onclick="setMode('student')">학생</button>
+            </div>
+        </div>
+
+        <header class="main-header">
+            <h1 class="year-title">2027 수능 대비</h1>
+            <div class="month-title-container">
+                <button class="nav-btn" onclick="changeMonth(-1)">&lt;</button>
+                <h2 class="month-title" id="current-month">Jan, 00</h2>
+                <button class="nav-btn" onclick="changeMonth(1)">&gt;</button>
+            </div>
+        </header>
+
+        <div class="calendar-box">
+            <div class="weekdays-grid">
+                <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div style="color:rgba(88,86,214,0.6)">Sat</div><div style="color:rgba(88,86,214,0.6)">Sun</div>
+            </div>
+            <div class="days-grid" id="calendar-days"></div>
+        </div>
+
+        <div class="bottom-nav-grid">
+            <button class="nav-card" onclick="showPage('book-page')">
+                <i class="fas fa-book"></i> <span>교재 진도</span>
+            </button>
+            <button class="nav-card" onclick="showPage('score-page')">
+                <i class="fas fa-chart-line"></i> <span>시험 성적</span>
+            </button>
+        </div>
+    </section>
+
+
+    <section id="book-page" class="hidden">
+        <header class="sub-page-header">
+            <button class="back-btn" onclick="showPage('main-page')">&lt;</button>
+            <h2>교재 진도표</h2>
+        </header>
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="filterBooks('ing', this)">진행 중</button>
+            <button class="tab-btn" onclick="filterBooks('done', this)">완료됨</button>
+        </div>
+        
+        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <input type="text" id="new-book-title" placeholder="교재명" style="margin-bottom:0; flex:2;">
+            <input type="number" id="new-book-total" placeholder="총 챕터" style="margin-bottom:0; flex:1;">
+            <button onclick="addBook()" style="background:var(--primary-color); color:var(--bg-color); border:none; border-radius:12px; padding:0 20px; font-weight:bold;">+</button>
+        </div>
+        <div id="book-list"></div>
+    </section>
+
+
+    <section id="score-page" class="hidden">
+        <header class="sub-page-header">
+            <button class="back-btn" onclick="showPage('main-page')">&lt;</button>
+            <h2>시험 성적</h2>
+        </header>
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchScoreTab('mock', this)">모의고사</button>
+            <button class="tab-btn" onclick="switchScoreTab('school', this)">내신</button>
+        </div>
+
+        <div id="mock-section">
+            <div class="score-input-grid">
+                <input type="text" id="mock-name" placeholder="시험명 (예: 6월)" style="grid-column: span 2;">
+                <input type="number" id="mock-kor" placeholder="국어">
+                <input type="number" id="mock-eng" placeholder="영어">
+                <input type="number" id="mock-soc1" placeholder="생윤">
+                <input type="number" id="mock-soc2" placeholder="사문">
+            </div>
+            <button class="save-btn" onclick="addMockScore()" style="margin-top:10px; margin-bottom:20px;">점수 기록</button>
+            <div class="chart-wrapper">
+                <canvas id="mockChart"></canvas>
+            </div>
+        </div>
+
+        <div id="school-section" class="hidden">
+             <div style="background: white; padding: 15px; border-radius: 15px; border: 2px solid #eee; margin-bottom: 15px;">
+                <div style="display: flex; gap: 15px; margin-bottom: 10px; justify-content: center;">
+                    <label><input type="radio" name="school-type" value="mid" checked> 중간고사</label>
+                    <label><input type="radio" name="school-type" value="final"> 기말고사</label>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="school-sub" placeholder="과목명 (예: 문학)" style="margin-bottom:0; flex:1;">
+                    <input type="number" id="school-score" placeholder="점수" style="margin-bottom:0; flex:0.5;">
+                </div>
+             </div>
+            <button class="save-btn" onclick="addSchoolScore()" style="margin-top:0; margin-bottom:20px;">내신 점수 추가</button>
+            <div class="chart-wrapper">
+                <canvas id="schoolChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+
+<div id="teacher-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="height: auto; min-height: auto;">
+        <div class="modal-header">
+            <h2 id="teacher-modal-date">Date</h2>
+            <button class="close-btn" onclick="closeModal('teacher-modal')">&times;</button>
+        </div>
+        <p style="text-align:center; font-weight:bold; margin-bottom:20px;">수업 시간을 설정해주세요.</p>
+        
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 30px;">
+            <div style="flex:1;">
+                <label class="form-label">시작</label>
+                <input type="time" id="start-time" style="margin-bottom:0;">
+            </div>
+            <div style="font-weight:bold; padding-top:20px;">~</div>
+            <div style="flex:1;">
+                <label class="form-label">종료</label>
+                <input type="time" id="end-time" style="margin-bottom:0;">
+            </div>
+        </div>
+
+        <button class="save-btn" onclick="confirmClassRegistration()">일정 등록하기</button>
+    </div>
+</div>
+
+
+<div id="student-modal" class="modal-overlay hidden">
+    <div class="modal-content large-modal">
+        <div class="modal-header">
+            <div>
+                <h2 id="student-modal-date" style="text-align:left;">Jan 00</h2>
+                <div style="color:var(--primary-color); font-weight:bold; font-size:1.1rem; margin-top:5px;">
+                    <i class="far fa-clock"></i> <span id="display-lesson-time">--:-- ~ --:--</span>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeModal('student-modal')">&times;</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:#F0F0FF; padding:15px; border-radius:15px;">
+            <span style="font-weight:bold;">수업 회차: <span id="lesson-count">N</span>회</span>
+            <span class="d-day-badge" id="d-day-display">D-Day</span>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label class="form-label">지난 과제 달성률 (<span id="homework-percent">0</span>%)</label>
+            <div class="progress-bar-bg" style="height:20px;">
+                <div class="progress-bar-fill" id="homework-gauge" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label class="form-label">오늘 수업 내용</label>
+            <textarea id="lesson-summary" rows="5" placeholder="수업 내용을 요약해주세요."></textarea>
+            
+            <div style="margin-top:10px;">
+                <label for="lesson-img-upload" class="file-upload-btn">
+                    <i class="fas fa-camera"></i> 사진 첨부하기
+                </label>
+                <input type="file" id="lesson-img-upload" accept="image/*" style="display:none;">
+                
+                <div id="img-preview-box" class="hidden" style="margin-top:15px; text-align:center;">
+                    <img id="current-lesson-img" src="" style="max-width:100%; border-radius:12px; border:2px solid #eee;">
+                    <a id="download-img-btn" href="#" download="lesson_image.png" class="download-link-btn">
+                        <i class="fas fa-download"></i> 사진 저장하기
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label class="form-label">다음 과제</label>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <input type="text" id="new-homework-input" placeholder="할 일 입력" style="margin-bottom:0;">
+                <button onclick="addHomeworkItem()" style="background:var(--primary-color); color:var(--bg-color); border:none; border-radius:12px; padding:0 15px;"><i class="fas fa-plus"></i></button>
+            </div>
+            <div id="homework-checklist"></div>
+        </div>
+        
+        <button class="save-btn" onclick="saveLessonDetails()">저장하기</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
