@@ -1,3 +1,14 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyBVut4DXb87NcUgOGlYJv8z8ex3UCsvxWM",
+  authDomain: "lesson-yurim.firebaseapp.com",
+  databaseURL: "https://lesson-yurim-default-rtdb.firebaseio.com",
+  projectId: "lesson-yurim",
+  storageBucket: "lesson-yurim.firebasestorage.app",
+  messagingSenderId: "68878856947",
+  appId: "1:68878856947:web:2119db84b3ec2c2bf27d86",
+  measurementId: "G-G9BZS569J3"
+};
+
 // --- 전역 설정 ---
 let currentMode = 'teacher';
 let currentDate = new Date();
